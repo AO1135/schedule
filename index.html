@@ -1062,19 +1062,7 @@ firebaseSet(
                 const card = document.createElement('div');
                 card.className = 'event-card';
                 card.innerHTML = `
-                    <div class="event-header">
-                    <!-- ハンバーガーメニュー -->
-<div class="hamburger" onclick="toggleMenu()">☰</div>
-<nav id="sideMenu" class="side-menu">
-  <ul>
-    <li onclick="openPage('schedule')">📅 マイ時間割</li>
-    <li onclick="openPage('events')">👥 グループ予定</li>
-    <li onclick="openPage('notifications')">🔔 通知</li>
-    <li onclick="openPage('groups')">🏫 グループ管理</li>
-    <li onclick="openPage('sharedView')">👀 他ユーザーの時間割</li>
-    <li onclick="logout()">🚪 ログアウト</li>
-  </ul>
-</nav>
+                    
 
                         <div>
                             <div class="event-title">${event.title}</div>
@@ -1402,6 +1390,7 @@ function viewSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
