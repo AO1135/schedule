@@ -535,8 +535,6 @@
           <th>水</th>
           <th>木</th>
           <th>金</th>
-          <th>土</th>
-          <th>日</th>
         </tr>
       </thead>
       <tbody id="sharedScheduleBody"></tbody>
@@ -588,8 +586,6 @@
                                     <th>水</th>
                                     <th>木</th>
                                     <th>金</th>
-                                    <th>土</th>
-                                    <th>日</th>
                                 </tr>
                             </thead>
                             <tbody id="scheduleBody"></tbody>
@@ -860,7 +856,7 @@ firebaseSet(
             tbody.innerHTML = '';
             
             const times = Object.keys(schedule).sort();
-            const days = ['月', '火', '水', '木', '金', '土', '日'];
+            const days = ['月', '火', '水', '木', '金'];
             
             times.forEach(time => {
                 const row = document.createElement('tr');
@@ -1421,26 +1417,53 @@ function loadMiniSharedSchedule() {
     const times = Object.keys(schedule).sort();
     const days = ['月','火','水','木','金'];
 
-    times.forEach(time => {
-      const row = document.createElement('tr');
-      const timeCell = document.createElement('td');
-      timeCell.innerHTML = time.replace('-', '<br>～<br>');
-      timeCell.style.padding = '4px';
-      row.appendChild(timeCell);
+// 🔽 横並び表示＆土日削除対応版 🔽
+times.forEach(time => {
+  const row = document.createElement('tr');
 
-      days.forEach(day => {
-        const cell = document.createElement('td');
-        cell.style.padding = '4px';
-        if (schedule[time][day]) {
-          cell.textContent = schedule[time][day].slice(0, 4); // 4文字だけ表示
-        } else {
-          cell.textContent = '-';
-        }
-        row.appendChild(cell);
+  // 時間セル
+  const timeCell = document.createElement('td');
+  timeCell.className = 'time-cell';
+  timeCell.innerHTML = time.replace('-', '<br>～<br>');
+  row.appendChild(timeCell);
+
+  // 各曜日ごとの授業を横並びに（複数対応）
+  days.forEach(day => {
+    const cell = document.createElement('td');
+    if (schedule[time][day]) {
+      const contents = Array.isArray(schedule[time][day])
+        ? schedule[time][day]
+        : [schedule[time][day]];
+
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.flexWrap = 'wrap';
+      wrapper.style.gap = '4px';
+
+      contents.forEach(c => {
+        const item = document.createElement('div');
+        item.className = 'schedule-item';
+        item.textContent = c;
+        wrapper.appendChild(item);
       });
 
-      tbody.appendChild(row);
-    });
+      cell.appendChild(wrapper);
+    }
+    row.appendChild(cell);
+  });
+
+  tbody.appendChild(row);
+});
+
+
+      cell.appendChild(wrapper);
+    }
+    row.appendChild(cell);
+  });
+
+  tbody.appendChild(row);
+});
+
 
     showNotification('時間割を読み込みました');
   });
@@ -1463,7 +1486,7 @@ function loadMiniSharedSchedule() {
     const tbody = document.getElementById('sharedScheduleBody');
     tbody.innerHTML = '';
     const times = Object.keys(schedule).sort();
-    const days = ['月','火','水','木','金','土','日'];
+    const days = ['月','火','水','木','金'];
 
     times.forEach(time => {
       const row = document.createElement('tr');
@@ -1494,6 +1517,7 @@ function loadMiniSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
