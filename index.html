@@ -400,6 +400,10 @@
             <div class="content">
                 <!-- 時間割タブ -->
                 <div id="scheduleTab">
+                    <div style="margin-bottom: 15px;">
+  <button class="btn btn-secondary" onclick="shareSchedule()">📤 この時間割を共有</button>
+</div>
+
                     <h2 style="margin-bottom: 20px;">週間時間割</h2>
                     <div class="add-time-slot">
                         <div class="form-group">
@@ -1056,6 +1060,24 @@ firebaseSet(
                 list.innerHTML = '<p style="text-align: center; color: #6b7280;">通知はありません</p>';
                 return;
             }
+            // 🔹 時間割共有
+function shareSchedule() {
+  if (!currentUser || !data.schedules[currentUser]) {
+    showNotification('共有する時間割がありません');
+    return;
+  }
+
+  // Firebase に共有用データを保存
+  firebaseSet(firebaseRef(firebaseDB, `sharedSchedules/${currentUser}`), data.schedules[currentUser])
+    .then(() => {
+      const shareUrl = `${location.origin}${location.pathname}?share=${currentUser}`;
+      navigator.clipboard.writeText(shareUrl);
+      showNotification('共有リンクをコピーしました！');
+      alert('このリンクを相手に送ってください：\n\n' + shareUrl);
+    })
+    .catch(() => showNotification('共有に失敗しました'));
+}
+
             
             notifs.reverse().forEach(notif => {
                 const event = data.events.find(e => e.id === notif.eventId);
@@ -1076,6 +1098,31 @@ firebaseSet(
                 list.appendChild(card);
             });
         }
+        // 🔹 URLパラメータで共有表示
+document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(location.search);
+  const sharedUser = params.get('share');
+
+  if (sharedUser) {
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = `共有表示中 (${sharedUser})`;
+
+    const userRef = firebaseRef(firebaseDB, `sharedSchedules/${sharedUser}`);
+    firebaseOnValue(userRef, (snapshot) => {
+      const schedule = snapshot.val() || {};
+      data.schedules['shared'] = schedule;
+      currentUser = 'shared';
+      loadSchedule();
+      showNotification('共有された時間割を表示中');
+    });
+
+    // 編集ボタンを無効化
+    const addButton = document.querySelector('.add-time-slot button');
+    if (addButton) addButton.disabled = true;
+  }
+});
+
     </script>
 <!-- Firebase Realtime Database 用スクリプト -->
 <script type="module">
@@ -1180,6 +1227,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
