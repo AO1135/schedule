@@ -1060,25 +1060,9 @@ firebaseSet(
                 list.innerHTML = '<p style="text-align: center; color: #6b7280;">通知はありません</p>';
                 return;
             }
-            // 🔹 時間割共有
-function shareSchedule() {
-  if (!currentUser || !data.schedules[currentUser]) {
-    showNotification('共有する時間割がありません');
-    return;
-  }
 
-  // Firebase に共有用データを保存
-  firebaseSet(firebaseRef(firebaseDB, `sharedSchedules/${currentUser}`), data.schedules[currentUser])
-    .then(() => {
-      const shareUrl = `${location.origin}${location.pathname}?share=${currentUser}`;
-      navigator.clipboard.writeText(shareUrl);
-      showNotification('共有リンクをコピーしました！');
-      alert('このリンクを相手に送ってください：\n\n' + shareUrl);
-    })
-    .catch(() => showNotification('共有に失敗しました'));
-}
 
-            
+
             notifs.reverse().forEach(notif => {
                 const event = data.events.find(e => e.id === notif.eventId);
                 if (!event) return;
@@ -1098,6 +1082,24 @@ function shareSchedule() {
                 list.appendChild(card);
             });
         }
+        // 🔹 時間割共有
+function shareSchedule() {
+  if (!currentUser || !data.schedules[currentUser]) {
+    showNotification('共有する時間割がありません');
+    return;
+  }
+
+  // Firebase に共有用データを保存
+  firebaseSet(firebaseRef(firebaseDB, `sharedSchedules/${currentUser}`), data.schedules[currentUser])
+    .then(() => {
+      const shareUrl = `${location.origin}${location.pathname}?share=${currentUser}`;
+      navigator.clipboard.writeText(shareUrl);
+      showNotification('共有リンクをコピーしました！');
+      alert('このリンクを相手に送ってください：\n\n' + shareUrl);
+    })
+    .catch(() => showNotification('共有に失敗しました'));
+}
+
         // 🔹 URLパラメータで共有表示
 document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(location.search);
@@ -1227,6 +1229,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
