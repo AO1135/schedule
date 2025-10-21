@@ -1066,6 +1066,11 @@ firebaseSet(
   firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
   data.notifications[currentUser]
 );
+// 🔹 追加：共有スケジュールにも自動保存
+firebaseSet(
+  firebaseRef(firebaseDB, `sharedSchedules/${currentUser}`),
+  data.schedules[currentUser]
+);
 
             closeModal();
             document.getElementById('eventTitle').value = '';
@@ -1489,6 +1494,7 @@ function loadMiniSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
