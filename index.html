@@ -18,6 +18,7 @@
   left: -250px;
   width: 220px;
   height: 100%;
+    overflow-y: auto; /* ← メニュー内スクロール可能に */
   background: #667eea;
   color: white;
   padding-top: 60px;
@@ -452,7 +453,32 @@
     <li onclick="openPage('sharedView')">👀 他ユーザーの時間割</li>
     <li onclick="logout()">🚪 ログアウト</li>
   </ul>
+
+  <!-- 🔹 他ユーザー時間割を常時表示する枠 -->
+  <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.3); overflow-y: auto; max-height: 40vh;">
+    <h3 style="font-size: 16px; margin-bottom: 10px;">👀 他ユーザー時間割</h3>
+    <input type="text" id="miniSharedUserId" placeholder="ユーザーIDを入力"
+      style="width: 100%; padding: 6px; border-radius: 5px; border: none; margin-bottom: 8px;">
+    <button class="btn btn-secondary" style="width: 100%; font-size: 12px;" onclick="loadMiniSharedSchedule()">表示</button>
+
+    <div id="miniSharedScheduleContainer" style="margin-top: 10px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px; background: rgba(255,255,255,0.15); border-radius: 6px;">
+        <thead>
+          <tr>
+            <th style="padding: 4px;">時限</th>
+            <th style="padding: 4px;">月</th>
+            <th style="padding: 4px;">火</th>
+            <th style="padding: 4px;">水</th>
+            <th style="padding: 4px;">木</th>
+            <th style="padding: 4px;">金</th>
+          </tr>
+        </thead>
+        <tbody id="miniSharedScheduleBody"></tbody>
+      </table>
+    </div>
+  </div>
 </nav>
+
 
 
             <div class="tabs">
@@ -1342,6 +1368,53 @@ document.addEventListener("DOMContentLoaded", () => {
 });
     // 🔹 他ユーザーの共有スケジュールを取得して表示
 function viewSharedSchedule() {
+    // 🔹 ハンバーガーメニュー内で小さく他ユーザー時間割を表示
+function loadMiniSharedSchedule() {
+  const uid = document.getElementById('miniSharedUserId').value.trim();
+  if (!uid) {
+    showNotification('ユーザーIDを入力してください');
+    return;
+  }
+
+  const refShared = firebaseRef(firebaseDB, `sharedSchedules/${uid}`);
+  firebaseOnValue(refShared, (snapshot) => {
+    const schedule = snapshot.val();
+    const tbody = document.getElementById('miniSharedScheduleBody');
+    tbody.innerHTML = '';
+
+    if (!schedule) {
+      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:white;">データなし</td></tr>`;
+      return;
+    }
+
+    const times = Object.keys(schedule).sort();
+    const days = ['月','火','水','木','金'];
+
+    times.forEach(time => {
+      const row = document.createElement('tr');
+      const timeCell = document.createElement('td');
+      timeCell.innerHTML = time.replace('-', '<br>～<br>');
+      timeCell.style.padding = '4px';
+      row.appendChild(timeCell);
+
+      days.forEach(day => {
+        const cell = document.createElement('td');
+        cell.style.padding = '4px';
+        if (schedule[time][day]) {
+          cell.textContent = schedule[time][day].slice(0, 4); // 4文字だけ表示
+        } else {
+          cell.textContent = '-';
+        }
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    });
+
+    showNotification('時間割を読み込みました');
+  });
+}
+
   const uid = document.getElementById('sharedUserId').value.trim();
   if (!uid) {
     showNotification('ユーザーIDを入力してください');
@@ -1390,6 +1463,7 @@ function viewSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
