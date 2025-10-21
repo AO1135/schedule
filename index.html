@@ -855,25 +855,26 @@ firebaseSet(
             }
             
             const event = {
-                id: 'event_' + Date.now(),
-                groupId: groupId,
-                title: title,
-                date: date,
-                time: time,
-                details: details,
-                minParticipants: minParticipants,
-                host: currentUser,
-                participants: {}
+  id: 'event_' + Date.now(),
+  groupId: groupId,
+  title: title,
+  date: date,
+  time: time,
+  details: details,
+  minParticipants: minParticipants,
+  host: currentUser,
+  participants: {}
+};
+
+data.events.push(event);
+
 // 🔹 Firebaseにイベントを保存
 firebaseSet(
   firebaseRef(firebaseDB, `users/${currentUser}/events`),
   data.events
 );
 
-        
-
             
-            data.events.push(event);
             
             // グループメンバーに通知
             data.groups[groupId].members.forEach(member => {
