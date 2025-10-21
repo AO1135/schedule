@@ -5,6 +5,55 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>時間割共有アプリ</title>
     <style>
+        /* ハンバーガーとメニュー */
+.hamburger {
+  font-size: 28px;
+  cursor: pointer;
+  display: none;
+}
+
+.side-menu {
+  position: fixed;
+  top: 0;
+  left: -250px;
+  width: 220px;
+  height: 100%;
+  background: #667eea;
+  color: white;
+  padding-top: 60px;
+  transition: 0.3s;
+  z-index: 3000;
+}
+
+.side-menu ul {
+  list-style: none;
+}
+
+.side-menu li {
+  padding: 15px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.side-menu li:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.side-menu.active {
+  left: 0;
+}
+
+/* スマホ時にハンバーガーを表示 */
+@media (max-width: 768px) {
+  .hamburger {
+    display: block;
+  }
+  .tabs {
+    display: none;
+  }
+}
+
         * {
             margin: 0;
             padding: 0;
@@ -398,6 +447,35 @@
             </div>
 
             <div class="content">
+            <!-- 👀 他ユーザー時間割タブ -->
+<div id="sharedViewTab" class="hidden">
+  <h2 style="margin-bottom: 20px;">👀 他ユーザーの時間割を見る</h2>
+  <div class="add-time-slot">
+    <div class="form-group">
+      <label>ユーザーID（UID）</label>
+      <input type="text" id="sharedUserId" placeholder="共有相手のUIDを入力">
+    </div>
+    <button class="btn btn-primary" onclick="viewSharedSchedule()">表示</button>
+  </div>
+  <div class="schedule-container">
+    <table class="schedule-table">
+      <thead>
+        <tr>
+          <th>時間</th>
+          <th>月</th>
+          <th>火</th>
+          <th>水</th>
+          <th>木</th>
+          <th>金</th>
+          <th>土</th>
+          <th>日</th>
+        </tr>
+      </thead>
+      <tbody id="sharedScheduleBody"></tbody>
+    </table>
+  </div>
+</div>
+    
                 <!-- 時間割タブ -->
                 <div id="scheduleTab">
                     <div style="margin-bottom: 15px;">
@@ -969,6 +1047,19 @@ firebaseSet(
                 card.className = 'event-card';
                 card.innerHTML = `
                     <div class="event-header">
+                    <!-- ハンバーガーメニュー -->
+<div class="hamburger" onclick="toggleMenu()">☰</div>
+<nav id="sideMenu" class="side-menu">
+  <ul>
+    <li onclick="openPage('schedule')">📅 マイ時間割</li>
+    <li onclick="openPage('events')">👥 グループ予定</li>
+    <li onclick="openPage('notifications')">🔔 通知</li>
+    <li onclick="openPage('groups')">🏫 グループ管理</li>
+    <li onclick="openPage('sharedView')">👀 他ユーザーの時間割</li>
+    <li onclick="logout()">🚪 ログアウト</li>
+  </ul>
+</nav>
+
                         <div>
                             <div class="event-title">${event.title}</div>
                             <div class="event-date">${event.date} ${event.time} - ${group.name}</div>
@@ -1124,6 +1215,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addButton) addButton.disabled = true;
   }
 });
+// 🔹 ハンバーガーメニュー操作
+function toggleMenu() {
+  document.getElementById('sideMenu').classList.toggle('active');
+}
+
+function openPage(tab) {
+  document.getElementById('sideMenu').classList.remove('active');
+
+  document.getElementById('scheduleTab').classList.add('hidden');
+  document.getElementById('eventsTab').classList.add('hidden');
+  document.getElementById('notificationsTab').classList.add('hidden');
+  document.getElementById('groupsTab').classList.add('hidden');
+  document.getElementById('sharedViewTab').classList.add('hidden');
+
+  document.getElementById(tab + 'Tab').classList.remove('hidden');
+
+  if (tab === 'events') loadEvents();
+  if (tab === 'notifications') loadNotifications();
+  if (tab === 'groups') loadGroups();
+}
 
     </script>
 <!-- Firebase Realtime Database 用スクリプト -->
@@ -1225,10 +1336,57 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser) loadGroups();
   });
 });
+    // 🔹 他ユーザーの共有スケジュールを取得して表示
+function viewSharedSchedule() {
+  const uid = document.getElementById('sharedUserId').value.trim();
+  if (!uid) {
+    showNotification('ユーザーIDを入力してください');
+    return;
+  }
+
+  const refShared = firebaseRef(firebaseDB, `sharedSchedules/${uid}`);
+  firebaseOnValue(refShared, (snapshot) => {
+    const schedule = snapshot.val();
+    if (!schedule) {
+      showNotification('そのユーザーの共有時間割は見つかりません');
+      return;
+    }
+
+    const tbody = document.getElementById('sharedScheduleBody');
+    tbody.innerHTML = '';
+    const times = Object.keys(schedule).sort();
+    const days = ['月','火','水','木','金','土','日'];
+
+    times.forEach(time => {
+      const row = document.createElement('tr');
+      const timeCell = document.createElement('td');
+      timeCell.className = 'time-cell';
+      timeCell.innerHTML = time.replace('-', '<br>～<br>');
+      row.appendChild(timeCell);
+
+      days.forEach(day => {
+        const cell = document.createElement('td');
+        if (schedule[time][day]) {
+          const item = document.createElement('div');
+          item.className = 'schedule-item';
+          item.textContent = schedule[time][day];
+          cell.appendChild(item);
+        }
+        row.appendChild(cell);
+      });
+
+      tbody.appendChild(row);
+    });
+
+    showNotification('共有時間割を読み込みました');
+  });
+}
+
 </script>
 
 </body>
 </html>
+
 
 
 
