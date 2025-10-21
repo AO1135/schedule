@@ -432,12 +432,28 @@
         <!-- メイン画面 -->
         <div id="mainScreen" class="hidden">
             <div class="header">
-                <h1>📅 時間割共有アプリ</h1>
-                <div class="user-info">
-                    <span id="currentUser"></span>
-                    <button class="btn btn-secondary" onclick="logout()">ログアウト</button>
-                </div>
-            </div>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <div class="hamburger" onclick="toggleMenu()">☰</div>
+    <h1>📅 時間割共有アプリ</h1>
+  </div>
+  <div class="user-info">
+    <span id="currentUser"></span>
+    <button class="btn btn-secondary" onclick="logout()">ログアウト</button>
+  </div>
+</div>
+
+<!-- ハンバーガーメニュー本体 -->
+<nav id="sideMenu" class="side-menu">
+  <ul>
+    <li onclick="openPage('schedule')">📅 マイ時間割</li>
+    <li onclick="openPage('events')">👥 グループ予定</li>
+    <li onclick="openPage('notifications')">🔔 通知</li>
+    <li onclick="openPage('groups')">🏫 グループ管理</li>
+    <li onclick="openPage('sharedView')">👀 他ユーザーの時間割</li>
+    <li onclick="logout()">🚪 ログアウト</li>
+  </ul>
+</nav>
+
 
             <div class="tabs">
                 <button class="tab active" onclick="switchTab(event, 'schedule')">マイ時間割</button>
@@ -1386,6 +1402,7 @@ function viewSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
