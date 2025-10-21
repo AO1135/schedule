@@ -588,6 +588,21 @@
                 firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
                 data.schedules[currentUser]
             );
+           // 🔹 ログイン後にFirebaseからユーザーごとのデータを取得＆リアルタイム監視
+const userRef = firebaseRef(firebaseDB, `users/${currentUser}`);
+firebaseOnValue(userRef, (snapshot) => {
+  const val = snapshot.val();
+  if (val) {
+    data.schedules[currentUser] = val.schedules || {};
+    data.notifications[currentUser] = val.notifications || [];
+    data.groups = val.groups || {};
+    data.events = val.events || [];
+  }
+  loadSchedule();
+  loadGroups();
+  loadEvents();
+  loadNotifications();
+});
 
                 showNotification('ログインしました');
             } else {
@@ -597,6 +612,11 @@
 
         // ログアウト
         function logout() {
+// 🔹 Firebaseリスナー解除（データをリセット）
+data.schedules = {};
+data.events = [];
+data.groups = {};
+data.notifications = {};
             currentUser = null;
             document.getElementById('loginScreen').classList.remove('hidden');
             document.getElementById('mainScreen').classList.add('hidden');
@@ -651,6 +671,11 @@
             document.getElementById('scheduleContent').value = '';
             
             loadSchedule();
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
+  data.schedules[currentUser]
+);
+// 🔹 Firebaseにスケジュールを保存
 firebaseSet(
   firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
   data.schedules[currentUser]
@@ -715,6 +740,12 @@ firebaseSet(
             document.getElementById('groupName').value = '';
             loadGroups();
             showNotification('グループを作成しました');
+// 🔹 Firebaseにグループを保存
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${currentUser}/groups`),
+  data.groups
+);
+
         }
 
         // グループ読み込み
@@ -833,7 +864,14 @@ firebaseSet(
                 minParticipants: minParticipants,
                 host: currentUser,
                 participants: {}
-            };
+// 🔹 Firebaseにイベントを保存
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${currentUser}/events`),
+  data.events
+);
+
+        
+
             
             data.events.push(event);
             
@@ -853,7 +891,12 @@ firebaseSet(
                     });
                 }
             });
-            
+            // 🔹 通知をFirebaseへ保存（全ユーザー分）
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
+  data.notifications[currentUser]
+);
+
             closeModal();
             document.getElementById('eventTitle').value = '';
             document.getElementById('eventDate').value = '';
@@ -959,6 +1002,18 @@ firebaseSet(
             loadEvents();
             showNotification(accept ? '参加を承認しました' : '不参加を伝えました');
         }
+// 🔹 通知をFirebaseへ保存（主催者側）
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${event.host}/notifications`),
+  data.notifications[event.host]
+);
+
+// 🔹 通知をFirebaseへ保存（自分側）
+firebaseSet(
+  firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
+  data.notifications[currentUser]
+);
+
 
         // イベント削除
         function deleteEvent(eventId) {
