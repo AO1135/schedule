@@ -676,10 +676,6 @@ firebaseSet(
   data.schedules[currentUser]
 );
 // 🔹 Firebaseにスケジュールを保存
-firebaseSet(
-  firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
-  data.schedules[currentUser]
-);
 
             showNotification('時間割を追加しました');
         }
@@ -854,7 +850,7 @@ firebaseSet(
                 return;
             }
             
-            const event = {
+const event = {
   id: 'event_' + Date.now(),
   groupId: groupId,
   title: title,
@@ -999,21 +995,19 @@ firebaseSet(
                 type: 'response',
                 message: `${currentUser}が予定「${event.title}」に${accept ? '参加' : '不参加'}しました`
             });
-            
+            // 🔹 通知をFirebaseへ保存（主催者側）
+            firebaseSet(
+            firebaseRef(firebaseDB, `users/${event.host}/notifications`),
+            data.notifications[event.host]
+            );
+            // 🔹 通知をFirebaseへ保存（自分側）
+            firebaseSet(
+            firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
+            data.notifications[currentUser]
+            );
             loadEvents();
             showNotification(accept ? '参加を承認しました' : '不参加を伝えました');
         }
-// 🔹 通知をFirebaseへ保存（主催者側）
-firebaseSet(
-  firebaseRef(firebaseDB, `users/${event.host}/notifications`),
-  data.notifications[event.host]
-);
-
-// 🔹 通知をFirebaseへ保存（自分側）
-firebaseSet(
-  firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
-  data.notifications[currentUser]
-);
 
 
         // イベント削除
