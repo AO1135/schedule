@@ -542,88 +542,65 @@
             }, 3000);
         }
 
-        // 新規登録
-        function register() {
-            const id = document.getElementById('loginId').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!id || !password) {
-                showNotification('IDとパスワードを入力してください');
-                return;
-            }
-            
-            if (data.users[id]) {
-                showNotification('このIDは既に使用されています');
-                return;
-            }
-            
-            data.users[id] = { password: password };
-            data.schedules[id] = {};
-            data.notifications[id] = [];
-            
-            showNotification('登録完了！ログインしてください');
-            document.getElementById('loginPassword').value = '';
-        }
+       // 新規登録
+async function register() {
+  const id = document.getElementById('loginId').value.trim();
+  const password = document.getElementById('loginPassword').value;
+
+  if (!id || !password) {
+    showNotification('IDとパスワードを入力してください');
+    return;
+  }
+
+  try {
+    // メール形式に変換（Firebase用）
+    await firebaseCreateUser(firebaseAuth, id + "@example.com", password);
+    showNotification('登録完了！ログインしてください');
+    document.getElementById('loginPassword').value = '';
+  } catch (error) {
+    showNotification('登録に失敗: ' + error.message);
+  }
+}
+
 
         // ログイン処理
-        function login() {
-            const id = document.getElementById('loginId').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            
-            if (!id || !password) {
-                showNotification('IDとパスワードを入力してください');
-                return;
-            }
-            
-            if (data.users[id] && data.users[id].password === password) {
-                currentUser = id;
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('mainScreen').classList.remove('hidden');
-                document.getElementById('currentUser').textContent = `ユーザー: ${id}`;
-                loadSchedule();
-                loadEvents();
-                loadNotifications();
-                loadGroups();
-                firebaseSet(
-                firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
-                data.schedules[currentUser]
-            );
-           // 🔹 ログイン後にFirebaseからユーザーごとのデータを取得＆リアルタイム監視
-const userRef = firebaseRef(firebaseDB, `users/${currentUser}`);
-firebaseOnValue(userRef, (snapshot) => {
-  const val = snapshot.val();
-  if (val) {
-    data.schedules[currentUser] = val.schedules || {};
-    data.notifications[currentUser] = val.notifications || [];
-    data.groups = val.groups || {};
-    data.events = val.events || [];
-  }
-  loadSchedule();
-  loadGroups();
-  loadEvents();
-  loadNotifications();
-});
+ // ログイン
+async function login() {
+  const id = document.getElementById('loginId').value.trim();
+  const password = document.getElementById('loginPassword').value;
 
-                showNotification('ログインしました');
-            } else {
-                showNotification('IDまたはパスワードが間違っています');
-            }
-        }
+  if (!id || !password) {
+    showNotification('IDとパスワードを入力してください');
+    return;
+  }
+
+  try {
+    const userCredential = await firebaseSignIn(firebaseAuth, id + "@example.com", password);
+    const user = userCredential.user;
+    currentUser = user.uid; // Firebase UID を使用
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = `ユーザー: ${id}`;
+    loadSchedule();
+    loadEvents();
+    loadNotifications();
+    loadGroups();
+    showNotification('ログインしました');
+  } catch (error) {
+    showNotification('ログインに失敗: ' + error.message);
+  }
+}
+
 
         // ログアウト
-        function logout() {
-// 🔹 Firebaseリスナー解除（データをリセット）
-data.schedules = {};
-data.events = [];
-data.groups = {};
-data.notifications = {};
-            currentUser = null;
-            document.getElementById('loginScreen').classList.remove('hidden');
-            document.getElementById('mainScreen').classList.add('hidden');
-            document.getElementById('loginId').value = '';
-            document.getElementById('loginPassword').value = '';
-            showNotification('ログアウトしました');
-        }
+        async function logout() {
+  await firebaseSignOut(firebaseAuth);
+  currentUser = null;
+  document.getElementById('loginScreen').classList.remove('hidden');
+  document.getElementById('mainScreen').classList.add('hidden');
+  showNotification('ログアウトしました');
+}
+
 
         // タブ切り替え
         function switchTab(e, tab) {
@@ -1056,7 +1033,6 @@ firebaseSet(
     </script>
 <!-- Firebase Realtime Database 用スクリプト -->
 <script type="module">
-  // Firebase SDKの読み込み
   import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
   import {
     getDatabase,
@@ -1067,6 +1043,15 @@ firebaseSet(
     update,
     remove
   } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+  // 🔽 ここを追加 🔽
+  import {
+    getAuth,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
+    signOut
+  } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 
   // あなたのFirebase設定
   const firebaseConfig = {
@@ -1079,9 +1064,24 @@ firebaseSet(
     appId: "1:942123523213:web:6b31fa2fe42c3924c256c4"
   };
 
-  // Firebase 初期化
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
+ // Firebase 初期化
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// 🔽 ここを追加
+const auth = getAuth(app);
+
+// 🔽 他のスクリプトから使えるように登録
+window.firebaseDB = db;
+window.firebaseAuth = auth;
+window.firebaseRef = ref;
+window.firebaseSet = set;
+window.firebaseOnValue = onValue;
+window.firebaseUpdate = update;
+window.firebaseRemove = remove;
+window.firebaseCreateUser = createUserWithEmailAndPassword;
+window.firebaseSignIn = signInWithEmailAndPassword;
+window.firebaseSignOut = signOut;
 
   // 他のスクリプトで使えるようにwindowへ登録
   window.firebaseDB = db;
@@ -1110,3 +1110,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
