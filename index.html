@@ -606,7 +606,7 @@ firebaseOnValue(userRef, (snapshot) => {
   loadEvents();
   loadNotifications();
 });
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
 
 onAuthStateChanged(firebaseAuth, (user) => {
   if (user) {
@@ -1128,6 +1128,30 @@ window.firebaseRemove = remove;
 window.firebaseCreateUser = createUserWithEmailAndPassword;
 window.firebaseSignIn = signInWithEmailAndPassword;
 window.firebaseSignOut = signOut;
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    window.currentUser = user.uid;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = `ユーザー: ${user.email.split('@')[0]}`;
+
+    const userRef = ref(db, `users/${user.uid}`);
+    onValue(userRef, (snapshot) => {
+      const val = snapshot.val() || {};
+      data.schedules[user.uid] = val.schedules || {};
+      data.notifications[user.uid] = val.notifications || [];
+      data.groups = val.groups || {};
+      data.events = val.events || [];
+      loadSchedule();
+      loadGroups();
+      loadEvents();
+      loadNotifications();
+    });
+  }
+});
+
 
   // 他のスクリプトで使えるようにwindowへ登録
   window.firebaseDB = db;
@@ -1156,5 +1180,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
