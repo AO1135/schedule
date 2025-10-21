@@ -584,7 +584,53 @@ async function login() {
     loadSchedule();
     loadEvents();
     loadNotifications();
-    loadGroups();
+    loadGroups();// ✅ Firebaseからユーザーごとのデータを取得
+const userRef = firebaseRef(firebaseDB, `users/${currentUser}`);
+firebaseOnValue(userRef, (snapshot) => {
+  const val = snapshot.val();
+  if (val) {
+    data.schedules[currentUser] = val.schedules || {};
+    data.notifications[currentUser] = val.notifications || [];
+    data.groups = val.groups || {};
+    data.events = val.events || [];
+  } else {
+    // 初回ログイン時（まだデータが無い場合）
+    data.schedules[currentUser] = {};
+    data.notifications[currentUser] = [];
+    data.groups = {};
+    data.events = [];
+  }
+
+  loadSchedule();
+  loadGroups();
+  loadEvents();
+  loadNotifications();
+});
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+onAuthStateChanged(firebaseAuth, (user) => {
+  if (user) {
+    currentUser = user.uid;
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('mainScreen').classList.remove('hidden');
+    document.getElementById('currentUser').textContent = `ユーザー: ${user.email.split('@')[0]}`;
+    
+    // 🔹 再ログイン時もFirebaseからデータを再読込
+    const userRef = firebaseRef(firebaseDB, `users/${currentUser}`);
+    firebaseOnValue(userRef, (snapshot) => {
+      const val = snapshot.val() || {};
+      data.schedules[currentUser] = val.schedules || {};
+      data.notifications[currentUser] = val.notifications || [];
+      data.groups = val.groups || {};
+      data.events = val.events || [];
+      loadSchedule();
+      loadGroups();
+      loadEvents();
+      loadNotifications();
+    });
+  }
+});
+
     showNotification('ログインしました');
   } catch (error) {
     showNotification('ログインに失敗: ' + error.message);
@@ -1110,4 +1156,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
