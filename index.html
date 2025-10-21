@@ -480,6 +480,32 @@
 </nav>
 
 
+  <!-- 🔹 他ユーザー時間割を常時表示する枠 -->
+  <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.3); overflow-y: auto; max-height: 40vh;">
+    <h3 style="font-size: 16px; margin-bottom: 10px;">👀 他ユーザー時間割</h3>
+    <input type="text" id="miniSharedUserId" placeholder="ユーザーIDを入力"
+      style="width: 100%; padding: 6px; border-radius: 5px; border: none; margin-bottom: 8px;">
+    <button class="btn btn-secondary" style="width: 100%; font-size: 12px;" onclick="loadMiniSharedSchedule()">表示</button>
+
+    <div id="miniSharedScheduleContainer" style="margin-top: 10px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 11px; background: rgba(255,255,255,0.15); border-radius: 6px;">
+        <thead>
+          <tr>
+            <th style="padding: 4px;">時限</th>
+            <th style="padding: 4px;">月</th>
+            <th style="padding: 4px;">火</th>
+            <th style="padding: 4px;">水</th>
+            <th style="padding: 4px;">木</th>
+            <th style="padding: 4px;">金</th>
+          </tr>
+        </thead>
+        <tbody id="miniSharedScheduleBody"></tbody>
+      </table>
+    </div>
+  </div>
+</nav>
+
+
 
             <div class="tabs">
                 <button class="tab active" onclick="switchTab(event, 'schedule')">マイ時間割</button>
@@ -1463,6 +1489,7 @@ function loadMiniSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
