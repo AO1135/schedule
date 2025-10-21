@@ -1223,49 +1223,22 @@ document.addEventListener('DOMContentLoaded', () => {
 function toggleMenu() {
   document.getElementById('sideMenu').classList.toggle('active');
 }
+
 function openPage(tab) {
-  // サイドメニューを閉じる
   document.getElementById('sideMenu').classList.remove('active');
 
-  // すべてのタブを非表示にする
-  const tabsToHide = ['scheduleTab','eventsTab','notificationsTab','groupsTab','sharedViewTab'];
-  tabsToHide.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.add('hidden');
-  });
+  document.getElementById('scheduleTab').classList.add('hidden');
+  document.getElementById('eventsTab').classList.add('hidden');
+  document.getElementById('notificationsTab').classList.add('hidden');
+  document.getElementById('groupsTab').classList.add('hidden');
+  document.getElementById('sharedViewTab').classList.add('hidden');
 
-  // 対象タブを表示（存在チェック）
-  const target = document.getElementById(tab + 'Tab');
-  if (target) {
-    target.classList.remove('hidden');
-  } else {
-    console.warn('openPage: 指定されたタブが見つかりません ->', tab);
-  }
+  document.getElementById(tab + 'Tab').classList.remove('hidden');
 
-  // ナビ（上部タブボタン）の active クラス更新（ある場合）
-  const topTabs = document.querySelectorAll('.tab');
-  topTabs.forEach(t => t.classList.remove('active'));
-  // 上部タブ名と side メニュー名は一致しないことがあるため、可能なら対応するボタンに data-target 属性を付けるのが良いですが
-  // 現状は tab 名が schedule|events|notifications|groups として渡される前提で処理します:
-  topTabs.forEach(t => {
-    const text = t.textContent || '';
-    if ((tab === 'schedule' && /マイ時間割|マイ時間割/.test(text)) ||
-        (tab === 'events' && /グループ予定/.test(text)) ||
-        (tab === 'notifications' && /通知/.test(text)) ||
-        (tab === 'groups' && /グループ管理/.test(text))) {
-      t.classList.add('active');
-    }
-  });
-
-  // ページ固有の初期化を呼ぶ
   if (tab === 'events') loadEvents();
   if (tab === 'notifications') loadNotifications();
   if (tab === 'groups') loadGroups();
-  if (tab === 'sharedView') {
-    // sharedView 用に初期化が必要ならここで呼ぶ（例: 空なら何もしない）
-  }
 }
-
 
     </script>
 <!-- Firebase Realtime Database 用スクリプト -->
@@ -1417,8 +1390,6 @@ function viewSharedSchedule() {
 
 </body>
 </html>
-
-
 
 
 
