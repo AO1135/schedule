@@ -219,6 +219,28 @@
             min-height: 80px;
             vertical-align: top;
         }
+        /* 24時間時間割用の微調整 */
+.schedule-table td {
+  height: 25px; /* 30分刻み1マス */
+  position: relative;
+}
+
+.schedule-item {
+  background: #e0e7ff;
+  color: #1e3a8a;
+  border-radius: 4px;
+  overflow: hidden;
+  font-size: 12px;
+  text-align: center;
+  transition: 0.2s;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+}
+
+/* 少し段をずらすために縦線を目立たせる */
+.schedule-table th, .schedule-table td {
+  border: 1px solid #ddd;
+}
+
         
         .time-cell {
             background: #f9fafb;
@@ -820,50 +842,85 @@ firebaseSet(
             showNotification('時間割を追加しました');
         }
 
-        // 時間割読み込み
-        function loadSchedule() {
+// 時間割読み込み（24時間・30分刻み固定表示）
+function loadSchedule() {
   const schedule = data.schedules[currentUser] || {};
   const tbody = document.getElementById('scheduleBody');
   tbody.innerHTML = '';
 
-  const times = [...new Set(Object.keys(schedule))].sort();
   const days = ['月', '火', '水', '木', '金', '土', '日'];
 
-  times.forEach(time => {
-    const row = document.createElement('tr');
+  // 0:00〜24:00を30分刻みで生成
+  const times = [];
+  for (let h = 0; h < 24; h++) {
+    times.push(`${String(h).padStart(2, '0')}:00`);
+    times.push(`${String(h).padStart(2, '0')}:30`);
+  }
 
+  // 行を生成
+  times.forEach((time, i) => {
+    const row = document.createElement('tr');
     const timeCell = document.createElement('td');
     timeCell.className = 'time-cell';
-    timeCell.innerHTML = time.replace('-', '<br>～<br>');
+    timeCell.innerHTML = time;
     row.appendChild(timeCell);
 
     days.forEach(day => {
       const cell = document.createElement('td');
-      const content = schedule[time]?.[day];
-      if (content) {
-        const item = document.createElement('div');
-        item.className = 'schedule-item';
-        item.textContent = content;
-        item.onclick = () => {
-          if (confirm('この予定を削除しますか？')) {
-            delete schedule[time][day];
-            // 時間帯に他の曜日が残っていなければ削除
-            if (Object.keys(schedule[time]).length === 0) {
-              delete schedule[time];
-            }
-            firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/schedules`), schedule);
-            loadSchedule();
-            showNotification('削除しました');
-          }
-        };
-        cell.appendChild(item);
-      }
+      cell.style.position = 'relative';
+      cell.style.height = '25px'; // 1マスの高さ
       row.appendChild(cell);
     });
 
     tbody.appendChild(row);
   });
+
+  // スケジュールを配置
+  Object.entries(schedule).forEach(([timeRange, dayData]) => {
+    const [start, end] = timeRange.split('-');
+    const startIndex = times.findIndex(t => t === start);
+    const endIndex = times.findIndex(t => t === end);
+    if (startIndex === -1 || endIndex === -1) return;
+
+    const duration = endIndex - startIndex || 1;
+    const height = duration * 25; // 各30分あたり25pxの高さ
+
+    days.forEach((day, dayIndex) => {
+      const content = dayData[day];
+      if (content) {
+        const row = tbody.rows[startIndex];
+        if (!row) return;
+        const cell = row.cells[dayIndex + 1];
+        const block = document.createElement('div');
+        block.className = 'schedule-item';
+        block.textContent = content;
+        block.style.position = 'absolute';
+        block.style.top = '0';
+        block.style.left = '0';
+        block.style.width = '100%';
+        block.style.height = `${height}px`;
+        block.style.background = '#c7d2fe';
+        block.style.borderRadius = '4px';
+        block.style.fontSize = '12px';
+        block.style.padding = '2px 4px';
+        block.style.boxSizing = 'border-box';
+        block.style.overflow = 'hidden';
+        block.style.cursor = 'pointer';
+        block.onclick = () => {
+          if (confirm(`「${content}」を削除しますか？`)) {
+            delete dayData[day];
+            if (Object.keys(dayData).length === 0) delete schedule[timeRange];
+            firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/schedules`), schedule);
+            loadSchedule();
+            showNotification('削除しました');
+          }
+        };
+        cell.appendChild(block);
+      }
+    });
+  });
 }
+
 
 
         // グループ作成
@@ -1514,6 +1571,7 @@ function resetSharedView() {
 
 </body>
 </html>
+
 
 
 
