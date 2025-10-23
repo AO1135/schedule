@@ -833,13 +833,51 @@ onAuthStateChanged(firebaseAuth, (user) => {
                 data.schedules[currentUser][timeKey] = {};
             }
             
-            if (schedule[timeKey][day]) {
-  if (!Array.isArray(schedule[timeKey][day])) {
-    schedule[timeKey][day] = [schedule[timeKey][day]];
+           function addSchedule() {
+  const day = document.getElementById('daySelect').value;
+  const start = document.getElementById('startTime').value;
+  const end = document.getElementById('endTime').value;
+  const content = document.getElementById('scheduleContent').value;
+
+  if (!start || !end || !content) {
+    showNotification('すべての項目を入力してください');
+    return;
   }
-  schedule[timeKey][day].push(content);
-} else {
-  schedule[timeKey][day] = [content];
+
+  if (!data.schedules[currentUser]) {
+    data.schedules[currentUser] = {};
+  }
+
+  const schedule = data.schedules[currentUser]; // ✅ ← ここを追加
+  const timeKey = `${start}-${end}`;
+
+  if (!schedule[timeKey]) {
+    schedule[timeKey] = {};
+  }
+
+  // ✅ 被り対応（同じ時間帯に複数登録）
+  if (schedule[timeKey][day]) {
+    if (!Array.isArray(schedule[timeKey][day])) {
+      schedule[timeKey][day] = [schedule[timeKey][day]];
+    }
+    schedule[timeKey][day].push(content);
+  } else {
+    schedule[timeKey][day] = [content];
+  }
+
+  // 入力欄リセット
+  document.getElementById('startTime').value = '';
+  document.getElementById('endTime').value = '';
+  document.getElementById('scheduleContent').value = '';
+
+  // Firebaseに保存
+  firebaseSet(
+    firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
+    data.schedules[currentUser]
+  );
+
+  loadSchedule();
+  showNotification('時間割を追加しました');
 }
 
             
@@ -1547,6 +1585,7 @@ function viewSharedSchedule() {
 
 </body>
 </html>
+
 
 
 
