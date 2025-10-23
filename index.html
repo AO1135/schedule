@@ -496,10 +496,17 @@
   </div>
 </div>
     
-                <!-- 時間割タブ -->
-               <div style="margin-bottom: 15px; display:flex; gap:10px; align-items:center;">
-  <button class="btn btn-secondary" onclick="shareSchedule()">📤 この時間割を共有</button>
-  <button class="btn btn-danger" onclick="resetSchedule()">🔁 全リセット（時間割）</button>
+          <!-- 時間割タブ -->
+<div id="scheduleTab">
+  <div style="margin-bottom: 15px; display:flex; gap:10px; align-items:center;">
+    <button class="btn btn-secondary" onclick="shareSchedule()">📤 この時間割を共有</button>
+    <button class="btn btn-danger" onclick="resetSchedule()">🔁 全リセット（時間割）</button>
+  </div>
+
+  <h2 style="margin-bottom: 20px;">週間時間割</h2>
+  <div class="add-time-slot">
+      <!-- （以下、時間割フォームとテーブルはそのまま） -->
+  </div>
 </div>
 
                     <h2 style="margin-bottom: 20px;">週間時間割</h2>
@@ -620,13 +627,7 @@
                     <label>必須参加人数</label>
                     <input type="number" id="minParticipants" min="1" value="1">
                 </div>
-               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h2>グループ予定</h2>
-    <div style="display:flex; gap:10px;">
-      <button class="btn btn-primary" onclick="showCreateEventModal()">+ 新しい予定を作成</button>
-      <button class="btn btn-danger" onclick="resetEvents()">🔁 全リセット（予定）</button>
-    </div>
-</div>
+            
 
             </div>
         </div>
@@ -1503,6 +1504,7 @@ function resetSharedView() {
 
 </body>
 </html>
+
 
 
 
