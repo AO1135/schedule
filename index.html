@@ -509,8 +509,6 @@
           <th>水</th>
           <th>木</th>
           <th>金</th>
-          <th>土</th>
-          <th>日</th>
         </tr>
       </thead>
       <tbody id="sharedScheduleBody"></tbody>
@@ -541,8 +539,6 @@
                                 <option value="水">水曜日</option>
                                 <option value="木">木曜日</option>
                                 <option value="金">金曜日</option>
-                                <option value="土">土曜日</option>
-                                <option value="日">日曜日</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -569,8 +565,6 @@
                                     <th>水</th>
                                     <th>木</th>
                                     <th>金</th>
-                                    <th>土</th>
-                                    <th>日</th>
                                 </tr>
                             </thead>
                             <tbody id="scheduleBody"></tbody>
@@ -1445,7 +1439,7 @@ function viewSharedSchedule() {
     const tbody = document.getElementById('sharedScheduleBody');
     tbody.innerHTML = '';
     const times = Object.keys(schedule).sort();
-    const days = ['月','火','水','木','金','土','日'];
+    const days = ['月','火','水','木','金'];
 
     times.forEach(time => {
       const row = document.createElement('tr');
@@ -1571,6 +1565,7 @@ function resetSharedView() {
 
 </body>
 </html>
+
 
 
 
