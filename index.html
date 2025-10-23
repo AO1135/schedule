@@ -18,7 +18,6 @@
   left: -250px;
   width: 220px;
   height: 100%;
-    overflow-y: auto; /* ← メニュー内スクロール可能に */
   background: #667eea;
   color: white;
   padding-top: 60px;
@@ -453,58 +452,7 @@
     <li onclick="openPage('sharedView')">👀 他ユーザーの時間割</li>
     <li onclick="logout()">🚪 ログアウト</li>
   </ul>
-
-  <!-- 🔹 他ユーザー時間割を常時表示する枠 -->
-  <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.3); overflow-y: auto; max-height: 40vh;">
-    <h3 style="font-size: 16px; margin-bottom: 10px;">👀 他ユーザー時間割</h3>
-    <input type="text" id="miniSharedUserId" placeholder="ユーザーIDを入力"
-      style="width: 100%; padding: 6px; border-radius: 5px; border: none; margin-bottom: 8px;">
-    <button class="btn btn-secondary" style="width: 100%; font-size: 12px;" onclick="loadMiniSharedSchedule()">表示</button>
-
-    <div id="miniSharedScheduleContainer" style="margin-top: 10px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px; background: rgba(255,255,255,0.15); border-radius: 6px;">
-        <thead>
-          <tr>
-            <th style="padding: 4px;">時限</th>
-            <th style="padding: 4px;">月</th>
-            <th style="padding: 4px;">火</th>
-            <th style="padding: 4px;">水</th>
-            <th style="padding: 4px;">木</th>
-            <th style="padding: 4px;">金</th>
-          </tr>
-        </thead>
-        <tbody id="miniSharedScheduleBody"></tbody>
-      </table>
-    </div>
-  </div>
 </nav>
-
-
-  <!-- 🔹 他ユーザー時間割を常時表示する枠 -->
-  <div style="padding: 10px; border-top: 1px solid rgba(255,255,255,0.3); overflow-y: auto; max-height: 40vh;">
-    <h3 style="font-size: 16px; margin-bottom: 10px;">👀 他ユーザー時間割</h3>
-    <input type="text" id="miniSharedUserId" placeholder="ユーザーIDを入力"
-      style="width: 100%; padding: 6px; border-radius: 5px; border: none; margin-bottom: 8px;">
-    <button class="btn btn-secondary" style="width: 100%; font-size: 12px;" onclick="loadMiniSharedSchedule()">表示</button>
-
-    <div id="miniSharedScheduleContainer" style="margin-top: 10px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; font-size: 11px; background: rgba(255,255,255,0.15); border-radius: 6px;">
-        <thead>
-          <tr>
-            <th style="padding: 4px;">時限</th>
-            <th style="padding: 4px;">月</th>
-            <th style="padding: 4px;">火</th>
-            <th style="padding: 4px;">水</th>
-            <th style="padding: 4px;">木</th>
-            <th style="padding: 4px;">金</th>
-          </tr>
-        </thead>
-        <tbody id="miniSharedScheduleBody"></tbody>
-      </table>
-    </div>
-  </div>
-</nav>
-
 
 
             <div class="tabs">
@@ -535,6 +483,8 @@
           <th>水</th>
           <th>木</th>
           <th>金</th>
+          <th>土</th>
+          <th>日</th>
         </tr>
       </thead>
       <tbody id="sharedScheduleBody"></tbody>
@@ -586,6 +536,8 @@
                                     <th>水</th>
                                     <th>木</th>
                                     <th>金</th>
+                                    <th>土</th>
+                                    <th>日</th>
                                 </tr>
                             </thead>
                             <tbody id="scheduleBody"></tbody>
@@ -833,53 +785,7 @@ onAuthStateChanged(firebaseAuth, (user) => {
                 data.schedules[currentUser][timeKey] = {};
             }
             
-           function addSchedule() {
-  const day = document.getElementById('daySelect').value;
-  const start = document.getElementById('startTime').value;
-  const end = document.getElementById('endTime').value;
-  const content = document.getElementById('scheduleContent').value;
-
-  if (!start || !end || !content) {
-    showNotification('すべての項目を入力してください');
-    return;
-  }
-
-  if (!data.schedules[currentUser]) {
-    data.schedules[currentUser] = {};
-  }
-
-  const schedule = data.schedules[currentUser]; // ✅ ← ここを追加
-  const timeKey = `${start}-${end}`;
-
-  if (!schedule[timeKey]) {
-    schedule[timeKey] = {};
-  }
-
-  // ✅ 被り対応（同じ時間帯に複数登録）
-  if (schedule[timeKey][day]) {
-    if (!Array.isArray(schedule[timeKey][day])) {
-      schedule[timeKey][day] = [schedule[timeKey][day]];
-    }
-    schedule[timeKey][day].push(content);
-  } else {
-    schedule[timeKey][day] = [content];
-  }
-
-  // 入力欄リセット
-  document.getElementById('startTime').value = '';
-  document.getElementById('endTime').value = '';
-  document.getElementById('scheduleContent').value = '';
-
-  // Firebaseに保存
-  firebaseSet(
-    firebaseRef(firebaseDB, `users/${currentUser}/schedules`),
-    data.schedules[currentUser]
-  );
-
-  loadSchedule();
-  showNotification('時間割を追加しました');
-}
-
+            data.schedules[currentUser][timeKey][day] = content;
             
             document.getElementById('startTime').value = '';
             document.getElementById('endTime').value = '';
@@ -902,7 +808,7 @@ firebaseSet(
             tbody.innerHTML = '';
             
             const times = Object.keys(schedule).sort();
-            const days = ['月', '火', '水', '木', '金'];
+            const days = ['月', '火', '水', '木', '金', '土', '日'];
             
             times.forEach(time => {
                 const row = document.createElement('tr');
@@ -912,50 +818,25 @@ firebaseSet(
                 row.appendChild(timeCell);
                 
                 days.forEach(day => {
-  const cell = document.createElement('td');
-  cell.style.display = "flex";
-  cell.style.flexDirection = "row";
-  cell.style.flexWrap = "wrap";
-  cell.style.gap = "5px";
-
-  const content = schedule[time][day];
-  if (Array.isArray(content)) {
-    content.forEach(c => {
-      const item = document.createElement('div');
-      item.className = 'schedule-item';
-      item.textContent = c;
-      item.onclick = () => {
-        if (confirm('この予定を削除しますか？')) {
-          const index = schedule[time][day].indexOf(c);
-          if (index > -1) schedule[time][day].splice(index, 1);
-          if (schedule[time][day].length === 0) delete schedule[time][day];
-          if (Object.keys(schedule[time]).length === 0) delete schedule[time];
-          firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/schedules`), schedule);
-          loadSchedule();
-          showNotification('削除しました');
-        }
-      };
-      cell.appendChild(item);
-    });
-  } else if (content) {
-    const item = document.createElement('div');
-    item.className = 'schedule-item';
-    item.textContent = content;
-    item.onclick = () => {
-      if (confirm('この予定を削除しますか？')) {
-        delete schedule[time][day];
-        if (Object.keys(schedule[time]).length === 0) delete schedule[time];
-        firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/schedules`), schedule);
-        loadSchedule();
-        showNotification('削除しました');
-      }
-    };
-    cell.appendChild(item);
-  }
-
-  row.appendChild(cell);
-});
-
+                    const cell = document.createElement('td');
+                    if (schedule[time][day]) {
+                        const item = document.createElement('div');
+                        item.className = 'schedule-item';
+                        item.textContent = schedule[time][day];
+                        item.onclick = () => {
+                            if (confirm('この予定を削除しますか？')) {
+                                delete schedule[time][day];
+                                loadSchedule();
+                                showNotification('削除しました');
+                            }
+                        };
+                        cell.appendChild(item);
+                    }
+                    row.appendChild(cell);
+                });
+                
+                tbody.appendChild(row);
+            });
         }
 
         // グループ作成
@@ -993,23 +874,21 @@ firebaseSet(
                 if (group.members.includes(currentUser)) {
                     const card = document.createElement('div');
                     card.className = 'event-card';
-                   card.innerHTML = `
-  <div class="event-header">
-    <div>
-      <div class="event-title">${group.name}</div>
-      <div class="event-date">作成者: ${group.creator}</div>
-    </div>
-    <button class="btn btn-danger" onclick="deleteGroup('${id}')">削除</button>
-  </div>
-  <div class="event-members">
-    ${group.members.map(m => `<span class="member-badge">${m}</span>`).join('')}
-  </div>
-  <div style="margin-top: 15px;">
-    <input type="text" id="member_${id}" placeholder="追加するメンバーのID" style="padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; margin-right: 10px; width: 200px;">
-    <button class="btn btn-primary" onclick="addMember('${id}')">メンバー追加</button>
-  </div>
-`;
-
+                    card.innerHTML = `
+                        <div class="event-header">
+                            <div>
+                                <div class="event-title">${group.name}</div>
+                                <div class="event-date">作成者: ${group.creator}</div>
+                            </div>
+                        </div>
+                        <div class="event-members">
+                            ${group.members.map(m => `<span class="member-badge">${m}</span>`).join('')}
+                        </div>
+                        <div style="margin-top: 15px;">
+                            <input type="text" id="member_${id}" placeholder="追加するメンバーのID" style="padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; margin-right: 10px; width: 200px;">
+                            <button class="btn btn-primary" onclick="addMember('${id}')">メンバー追加</button>
+                        </div>
+                    `;
                     list.appendChild(card);
                 }
             });
@@ -1134,11 +1013,6 @@ firebaseSet(
 firebaseSet(
   firebaseRef(firebaseDB, `users/${currentUser}/notifications`),
   data.notifications[currentUser]
-);
-// 🔹 追加：共有スケジュールにも自動保存
-firebaseSet(
-  firebaseRef(firebaseDB, `sharedSchedules/${currentUser}`),
-  data.schedules[currentUser]
 );
 
             closeModal();
@@ -1365,14 +1239,6 @@ function openPage(tab) {
   if (tab === 'notifications') loadNotifications();
   if (tab === 'groups') loadGroups();
 }
-            function deleteGroup(groupId) {
-  if (!confirm('このグループを削除しますか？')) return;
-  delete data.groups[groupId];
-  firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/groups`), data.groups);
-  loadGroups();
-  showNotification('グループを削除しました');
-}
-
 
     </script>
 <!-- Firebase Realtime Database 用スクリプト -->
@@ -1474,67 +1340,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser) loadGroups();
   });
 });
-// 🔹 ハンバーガーメニュー内で小さく他ユーザー時間割を表示
-function loadMiniSharedSchedule() {
-  const uid = document.getElementById('miniSharedUserId').value.trim();
-  if (!uid) {
-    showNotification('ユーザーIDを入力してください');
-    return;
-  }
-
-  const refShared = firebaseRef(firebaseDB, `sharedSchedules/${uid}`);
-  firebaseOnValue(refShared, (snapshot) => {
-    const schedule = snapshot.val();
-    const tbody = document.getElementById('miniSharedScheduleBody');
-    tbody.innerHTML = '';
-
-    if (!schedule) {
-      tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:white;">データなし</td></tr>`;
-      return;
-    }
-
-    const times = Object.keys(schedule).sort();
-    const days = ['月','火','水','木','金'];
-
-    times.forEach(time => {
-      const row = document.createElement('tr');
-      const timeCell = document.createElement('td');
-      timeCell.className = 'time-cell';
-      timeCell.innerHTML = time.replace('-', '<br>～<br>');
-      row.appendChild(timeCell);
-
-      days.forEach(day => {
-        const cell = document.createElement('td');
-        if (schedule[time][day]) {
-          const contents = Array.isArray(schedule[time][day])
-            ? schedule[time][day]
-            : [schedule[time][day]];
-
-          const wrapper = document.createElement('div');
-          wrapper.style.display = 'flex';
-          wrapper.style.flexWrap = 'wrap';
-          wrapper.style.gap = '4px';
-
-          contents.forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'schedule-item';
-            item.textContent = c;
-            wrapper.appendChild(item);
-          });
-
-          cell.appendChild(wrapper);
-        }
-        row.appendChild(cell);
-      });
-
-      tbody.appendChild(row);
-    });
-
-    showNotification('時間割を読み込みました');
-  });
-}
-
-// 🔹 他ユーザーの共有スケジュールを取得して表示
+    // 🔹 他ユーザーの共有スケジュールを取得して表示
 function viewSharedSchedule() {
   const uid = document.getElementById('sharedUserId').value.trim();
   if (!uid) {
@@ -1553,7 +1359,7 @@ function viewSharedSchedule() {
     const tbody = document.getElementById('sharedScheduleBody');
     tbody.innerHTML = '';
     const times = Object.keys(schedule).sort();
-    const days = ['月','火','水','木','金'];
+    const days = ['月','火','水','木','金','土','日'];
 
     times.forEach(time => {
       const row = document.createElement('tr');
@@ -1580,18 +1386,10 @@ function viewSharedSchedule() {
   });
 }
 
-
 </script>
 
 </body>
 </html>
-
-
-
-
-
-
-
 
 
 
