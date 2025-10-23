@@ -822,41 +822,49 @@ firebaseSet(
 
         // 時間割読み込み
         function loadSchedule() {
-            const schedule = data.schedules[currentUser] || {};
-            const tbody = document.getElementById('scheduleBody');
-            tbody.innerHTML = '';
-            
-            const times = Object.keys(schedule).sort();
-            const days = ['月', '火', '水', '木', '金', '土', '日'];
-            
-            times.forEach(time => {
-                const row = document.createElement('tr');
-                const timeCell = document.createElement('td');
-                timeCell.className = 'time-cell';
-                timeCell.innerHTML = time.replace('-', '<br>～<br>');
-                row.appendChild(timeCell);
-                
-                days.forEach(day => {
-                    const cell = document.createElement('td');
-                    if (schedule[time][day]) {
-                        const item = document.createElement('div');
-                        item.className = 'schedule-item';
-                        item.textContent = schedule[time][day];
-                        item.onclick = () => {
-                            if (confirm('この予定を削除しますか？')) {
-                                delete schedule[time][day];
-                                loadSchedule();
-                                showNotification('削除しました');
-                            }
-                        };
-                        cell.appendChild(item);
-                    }
-                    row.appendChild(cell);
-                });
-                
-                tbody.appendChild(row);
-            });
-        }
+  const schedule = data.schedules[currentUser] || {};
+  const tbody = document.getElementById('scheduleBody');
+  tbody.innerHTML = '';
+
+  const times = [...new Set(Object.keys(schedule))].sort();
+  const days = ['月', '火', '水', '木', '金', '土', '日'];
+
+  times.forEach(time => {
+    const row = document.createElement('tr');
+
+    const timeCell = document.createElement('td');
+    timeCell.className = 'time-cell';
+    timeCell.innerHTML = time.replace('-', '<br>～<br>');
+    row.appendChild(timeCell);
+
+    days.forEach(day => {
+      const cell = document.createElement('td');
+      const content = schedule[time]?.[day];
+      if (content) {
+        const item = document.createElement('div');
+        item.className = 'schedule-item';
+        item.textContent = content;
+        item.onclick = () => {
+          if (confirm('この予定を削除しますか？')) {
+            delete schedule[time][day];
+            // 時間帯に他の曜日が残っていなければ削除
+            if (Object.keys(schedule[time]).length === 0) {
+              delete schedule[time];
+            }
+            firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/schedules`), schedule);
+            loadSchedule();
+            showNotification('削除しました');
+          }
+        };
+        cell.appendChild(item);
+      }
+      row.appendChild(cell);
+    });
+
+    tbody.appendChild(row);
+  });
+}
+
 
         // グループ作成
         function createGroup() {
@@ -1506,6 +1514,7 @@ function resetSharedView() {
 
 </body>
 </html>
+
 
 
 
