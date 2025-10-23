@@ -893,21 +893,23 @@ firebaseSet(
                 if (group.members.includes(currentUser)) {
                     const card = document.createElement('div');
                     card.className = 'event-card';
-                    card.innerHTML = `
-                        <div class="event-header">
-                            <div>
-                                <div class="event-title">${group.name}</div>
-                                <div class="event-date">作成者: ${group.creator}</div>
-                            </div>
-                        </div>
-                        <div class="event-members">
-                            ${group.members.map(m => `<span class="member-badge">${m}</span>`).join('')}
-                        </div>
-                        <div style="margin-top: 15px;">
-                            <input type="text" id="member_${id}" placeholder="追加するメンバーのID" style="padding: 8px; border: 2px solid #e5e7eb; border-radius: 6px; margin-right: 10px; width: 200px;">
-                            <button class="btn btn-primary" onclick="addMember('${id}')">メンバー追加</button>
-                        </div>
-                    `;
+                   function deleteGroup(groupId) {
+  if (!confirm('このグループを削除しますか？')) return;
+
+  if (data.groups[groupId] && data.groups[groupId].creator === currentUser) {
+    delete data.groups[groupId];
+    firebaseSet(firebaseRef(firebaseDB, `groups`), data.groups)
+      .then(() => {
+        firebaseSet(firebaseRef(firebaseDB, `users/${currentUser}/groups`), data.groups);
+        loadGroups();
+        showNotification('グループを削除しました');
+      })
+      .catch(() => showNotification('グループの削除に失敗しました'));
+  } else {
+    showNotification('このグループを削除する権限がありません');
+  }
+}
+
                     list.appendChild(card);
                 }
             });
@@ -1504,6 +1506,7 @@ function resetSharedView() {
 
 </body>
 </html>
+
 
 
 
